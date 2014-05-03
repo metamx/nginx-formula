@@ -35,10 +35,10 @@ nginx-old-init-disable:
 {% elif salt['grains.get']('os_family') == 'RedHat' %}
 nginx-old-init:
   file.symlink:
-    name: /etc/init.d/nginx
-    target: /sbin/initctl
-    force: True
-    require_in:
+    - name: /etc/init.d/nginx
+    - target: /sbin/initctl
+    - force: True
+    - require_in:
       - file: nginx
 {% endif %}
 
