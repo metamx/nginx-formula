@@ -1,4 +1,4 @@
-
+{% if salt['grains.get']('os_family') == 'Debian' %}
 nginx-old-init:
   file:
     - rename
@@ -32,6 +32,7 @@ nginx-old-init-disable:
       - module: nginx-old-init
     - watch:
       - file: nginx-old-init
+{% endif %}
 
 nginx:
   pkg.installed:
@@ -46,8 +47,10 @@ nginx:
     - source: salt://nginx/templates/upstart.jinja
     - require:
       - pkg: nginx
+{% if salt['grains.get']('os_family') == 'Debian' %}
       - file: nginx-old-init
       - module: nginx-old-init
+{% endif %}
   service:
     - running
     - enable: True
