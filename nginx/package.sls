@@ -32,7 +32,7 @@ nginx-old-init-disable:
       - module: nginx-old-init
     - watch:
       - file: nginx-old-init
-{% elseif salt['grains.get']('os_family') == 'RedHat' %}
+{% elif salt['grains.get']('os_family') == 'RedHat' %}
 nginx-old-init:
   file.symlink:
     name: /etc/init.d/nginx
