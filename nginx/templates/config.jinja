@@ -1,6 +1,14 @@
 {% set nginx = pillar.get('nginx', {}) -%}
-{% set user = nginx.get('user', 'www-data') -%}
-{% set group = nginx.get('group', 'www-data') -%}
+{% set defaultuser = salt['grains.filter_by']({
+  'Debian': 'www-data',
+  'RedHat': 'nginx',
+  'default': 'RedHat'}) -%}
+{% set defaultgroup = salt['grains.filter_by']({
+  'Debian': 'www-data',
+  'RedHat': 'nginx',
+  'default': 'RedHat'}) -%}
+{% set user = nginx.get('user', defaultuser) -%}
+{% set group = nginx.get('group', defaultgroup) -%}
 user   {{ user }} {{ group }};
 worker_processes  {{ nginx.get('worker_processes', 1) }};
 

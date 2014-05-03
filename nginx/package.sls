@@ -32,6 +32,14 @@ nginx-old-init-disable:
       - module: nginx-old-init
     - watch:
       - file: nginx-old-init
+{% elseif salt['grains.get']('os_family') == 'RedHat' %}
+nginx-old-init:
+  file.symlink:
+    name: /etc/init.d/nginx
+    target: /sbin/initctl
+    force: True
+    require_in:
+      - file: nginx
 {% endif %}
 
 nginx:
@@ -47,10 +55,6 @@ nginx:
     - source: salt://nginx/templates/upstart.jinja
     - require:
       - pkg: nginx
-{% if salt['grains.get']('os_family') == 'Debian' %}
-      - file: nginx-old-init
-      - module: nginx-old-init
-{% endif %}
   service:
     - running
     - enable: True
