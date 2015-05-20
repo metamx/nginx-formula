@@ -1,61 +1,51 @@
+{% from "nginx/map.jinja" import nginx as nginx_map with context %}
+{% set nginx = pillar.get('nginx', {}) -%}
+{% set home = nginx.get('home', '/var/www') -%}
+{% set conf_dir = nginx.get('conf_dir', '/etc/nginx') -%}
+{% set conf_template = nginx.get('conf_template', 'salt://nginx/templates/config.jinja') -%}
+
+{{ home }}:
+  file:
+    - directory
+    - user: {{ nginx_map.default_user }}
+    - group: {{ nginx_map.default_group }}
+    - mode: 0755
+    - makedirs: True
+
 /usr/share/nginx:
   file:
     - directory
 
 {% for filename in ('default', 'example_ssl') %}
-/etc/nginx/conf.d/{{ filename }}.conf:
+{{ conf_dir }}/conf.d/{{ filename }}.conf:
   file.absent
 {% endfor %}
 
-{% set logger_types = ('access', 'error') %}
-
-{% for log_type in logger_types %}
-/var/log/nginx/{{ log_type }}.log:
-  file.absent
-
-nginx-logger-{{ log_type }}:
-  file:
-    - managed
-    - name: /etc/init/nginx-logger-{{ log_type }}.conf
-    - template: jinja
-    - user: root
-    - group: root
-    - mode: 440
-    - source: salt://nginx/templates/upstart-logger.jinja
-    - context:
-      type: {{ log_type }}
-  service:
-    - running
-    - enable: True
-    - require:
-      - file: nginx-logger-{{ log_type }}
-    - require_in:
-      - service: nginx
-{% endfor %}
-
-/etc/logrotate.d/nginx:
-  file:
-    - absent
-
-/etc/nginx:
+{{ conf_dir }}:
   file.directory:
     - user: root
     - group: root
+    - makedirs: True
 
-/etc/nginx/nginx.conf:
+{{ conf_dir }}/nginx.conf:
   file:
     - managed
     - template: jinja
     - user: root
     - group: root
-    - mode: 440
-    - source: salt://nginx/templates/config.jinja
+    - mode: 644
+    - source: {{ conf_template }}
     - require:
-      - file: /etc/nginx
+      - file: {{ conf_dir }}
+    - context:
+      default_user: {{ nginx_map.default_user }}
+      default_group: {{ nginx_map.default_group }}
 
+{% if nginx.get('init_conf_dirs', True) %}
 {% for dir in ('sites-enabled', 'sites-available') %}
-/etc/nginx/{{ dir }}:
+{{ conf_dir }}/{{ dir }}:
   file.directory:
     - user: root
     - group: root
 {% endfor -%}
+{% endif %}
